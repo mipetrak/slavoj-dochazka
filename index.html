@@ -567,7 +567,10 @@ function renderHistory() {
         ${other.length?`<div style="margin-bottom:6px"><div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Jiné</div><div class="detail-grid">${other.map(p=>`<span class="detail-chip chip-other">${p.name}</span>`).join('')}</div></div>`:''}
         ${s.type==='match'?`<div style="margin-top:8px"><div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Statistiky</div><div style="font-size:13px;color:var(--text2)">${s.players.filter(p=>p.goals||p.assists).map(p=>`${p.name}: ${p.goals}⚽ ${p.assists}🅰`).join(' · ') || 'Bez statistik'}</div></div>`:''}
         ${s.note?`<div class="detail-note">📝 ${s.note}</div>`:''}
-      </div>`;
+        <div style="display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+          <button onclick="resendSession(${s.id},event)" style="flex:1;padding:8px;background:var(--green-dim);border:1px solid rgba(0,200,83,0.25);color:var(--green);border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">📤 Odeslat do Sheets</button>
+          <button onclick="deleteSession(${s.id},event)" style="padding:8px 14px;background:var(--red-dim);border:1px solid rgba(255,61,87,0.2);color:var(--red);border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">🗑</button>
+        </div>
     list.appendChild(card);
   });
 }
@@ -578,6 +581,37 @@ function toggleDetail(header) {
   const isOpen = detail.style.display !== 'none';
   detail.style.display = isOpen ? 'none' : 'block';
   arrow.classList.toggle('open', !isOpen);
+}
+
+async function resendSession(id, e) {
+  e.stopPropagation();
+  const s = state.sessions.find(s=>s.id===id);
+  if (!s) return;
+  if (!state.sheetsUrl) { showToast('Nejprve nastavte URL Google Sheets!', true); return; }
+  const btn = e.target;
+  btn.textContent = '⏳ Odesílám...';
+  btn.disabled = true;
+  try {
+    await fetch(state.sheetsUrl, {
+      method: 'POST', mode: 'no-cors',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(s),
+    });
+    showToast('✅ Záznam odeslán do Sheets!');
+  } catch {
+    showToast('❌ Odeslání selhalo', true);
+  }
+  btn.textContent = '📤 Odeslat do Sheets';
+  btn.disabled = false;
+}
+
+function deleteSession(id, e) {
+  e.stopPropagation();
+  if (!confirm('Smazat tento záznam?')) return;
+  state.sessions = state.sessions.filter(s=>s.id!==id);
+  localStorage.setItem('sessions', JSON.stringify(state.sessions));
+  renderHistory();
+  showToast('🗑 Záznam smazán');
 }
 
 // ---- PLAYER MANAGEMENT ----
