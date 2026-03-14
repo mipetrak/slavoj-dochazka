@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>⚽ Docházka FC</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00C853;
+    --green-dark: #009624;
+    --green-dim: rgba(0,200,83,0.12);
+    --red: #FF3D57;
+    --red-dim: rgba(255,61,87,0.12);
+    --yellow: #FFD600;
+    --yellow-dim: rgba(255,214,0,0.12);
+    --blue: #42A5F5;
+    --blue-dim: rgba(66,165,245,0.12);
+    --bg: #0A0F0D;
+    --bg2: #111A14;
+    --bg3: #18261C;
+    --card: #1C2B20;
+    --border: rgba(255,255,255,0.07);
+    --text: #F0F4F1;
+    --text2: #8FA896;
+    --text3: #5A7362;
+    --accent: #00C853;
+    --radius: 14px;
+    --font-display: 'Barlow Condensed', sans-serif;
+    --font-body: 'Barlow', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); overscroll-behavior: none; }
+
+  /* LAYOUT */
+  #app { display: flex; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; }
+  .header { padding: 16px 20px 12px; background: var(--bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: var(--font-display); font-size: 22px; font-weight: 900; letter-spacing: 0.5px; color: var(--text); }
+  .logo span { color: var(--green); }
+  .sheets-btn { display: flex; align-items: center; gap: 6px; background: var(--green-dim); border: 1px solid rgba(0,200,83,0.25); color: var(--green); font-family: var(--font-body); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; transition: all .2s; }
+  .sheets-btn:hover { background: var(--green); color: #000; }
+  .tab-bar { display: flex; gap: 4px; margin-top: 12px; background: var(--bg2); border-radius: 10px; padding: 3px; }
+  .tab { flex: 1; padding: 8px 4px; text-align: center; font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: 0.5px; color: var(--text3); cursor: pointer; border-radius: 8px; transition: all .2s; text-transform: uppercase; }
+  .tab.active { background: var(--card); color: var(--green); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+  .content { flex: 1; overflow-y: auto; padding: 16px; }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px; border: 1px solid var(--border); margin-bottom: 12px; }
+  .card-title { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); margin-bottom: 12px; }
+
+  /* SESSION FORM */
+  .session-type-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .type-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-family: var(--font-display); font-size: 15px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; transition: all .2s; text-align: center; }
+  .type-btn.active-training { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+  .type-btn.active-match { background: var(--yellow-dim); border-color: var(--yellow); color: var(--yellow); }
+
+  .input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .input-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+  input, select, textarea { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 15px; padding: 10px 12px; width: 100%; outline: none; transition: border-color .2s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--green); }
+  select option { background: var(--bg2); }
+  textarea { resize: none; height: 60px; }
+
+  /* PLAYER LIST */
+  .players-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .players-count { font-size: 12px; color: var(--text3); }
+  .players-count strong { color: var(--green); }
+  .select-all-btn { font-size: 12px; color: var(--green); font-weight: 600; cursor: pointer; background: none; border: none; }
+
+  .player-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--bg2); margin-bottom: 6px; cursor: pointer; border: 1px solid transparent; transition: all .15s; user-select: none; }
+  .player-item.present { background: var(--green-dim); border-color: rgba(0,200,83,0.25); }
+  .player-item.excused { background: var(--yellow-dim); border-color: rgba(255,214,0,0.2); }
+  .player-item.absent { background: var(--red-dim); border-color: rgba(255,61,87,0.15); }
+  .player-item.other { background: var(--blue-dim); border-color: rgba(66,165,245,0.2); }
+
+  .player-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 14px; font-weight: 800; color: var(--text2); flex-shrink: 0; }
+  .player-item.present .player-avatar { background: rgba(0,200,83,0.2); color: var(--green); }
+  .player-item.excused .player-avatar { background: rgba(255,214,0,0.2); color: var(--yellow); }
+  .player-item.absent .player-avatar { background: rgba(255,61,87,0.15); color: var(--red); }
+  .player-item.other .player-avatar { background: rgba(66,165,245,0.2); color: var(--blue); }
+
+  .player-info { flex: 1; }
+  .player-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .player-pos { font-size: 11px; color: var(--text3); letter-spacing: 0.5px; }
+
+  .status-group { display: flex; gap: 4px; }
+  .status-dot { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; transition: all .15s; }
+  .status-dot.s-present { border-color: var(--green); background: var(--green); }
+  .status-dot.s-excused { border-color: var(--yellow); background: var(--yellow); }
+  .status-dot.s-absent { border-color: var(--red); background: var(--red); }
+  .status-dot.s-other { border-color: var(--blue); background: var(--blue); }
+
+  /* STATS (for match) */
+  .stats-row { display: flex; gap: 6px; }
+  .stats-mini { display: flex; align-items: center; gap: 4px; background: var(--bg3); border-radius: 6px; padding: 4px 8px; }
+  .stats-mini input { width: 32px; padding: 2px 4px; text-align: center; font-size: 14px; background: transparent; border: none; color: var(--text); }
+  .stats-mini span { font-size: 11px; color: var(--text3); }
+
+  /* SAVE BUTTON */
+  .save-btn { width: 100%; padding: 16px; background: var(--green); color: #000; font-family: var(--font-display); font-size: 18px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; border: none; border-radius: 12px; cursor: pointer; transition: all .2s; margin-top: 8px; position: relative; overflow: hidden; }
+  .save-btn:active { transform: scale(0.98); }
+  .save-btn:disabled { background: var(--bg3); color: var(--text3); cursor: not-allowed; }
+  .save-btn.loading::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; }
+
+  /* HISTORY TAB */
+  .session-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 10px; overflow: hidden; }
+  .session-card-header { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .session-meta { display: flex; flex-direction: column; gap: 2px; }
+  .session-date { font-family: var(--font-display); font-size: 16px; font-weight: 800; color: var(--text); }
+  .session-type-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .tag-training { background: var(--green-dim); color: var(--green); }
+  .tag-match { background: var(--yellow-dim); color: var(--yellow); }
+  .session-stats { display: flex; gap: 12px; align-items: center; }
+  .stat-pill { display: flex; flex-direction: column; align-items: center; }
+  .stat-pill-val { font-family: var(--font-display); font-size: 22px; font-weight: 900; line-height: 1; }
+  .stat-pill-val.green { color: var(--green); }
+  .stat-pill-val.yellow { color: var(--yellow); }
+  .stat-pill-val.red { color: var(--red); }
+  .stat-pill-lbl { font-size: 9px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+  .session-expand { color: var(--text3); font-size: 18px; transition: transform .2s; }
+  .session-expand.open { transform: rotate(180deg); }
+  .session-detail { padding: 0 16px 12px; border-top: 1px solid var(--border); }
+  .detail-grid { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 10px; }
+  .detail-chip { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .chip-present { background: var(--green-dim); color: var(--green); }
+  .chip-excused { background: var(--yellow-dim); color: var(--yellow); }
+  .chip-absent { background: var(--red-dim); color: var(--red); }
+  .chip-other { background: var(--blue-dim); color: var(--blue); }
+  .detail-note { font-size: 12px; color: var(--text3); margin-top: 8px; font-style: italic; }
+  .match-score { font-family: var(--font-display); font-size: 24px; font-weight: 900; color: var(--yellow); letter-spacing: 1px; }
+
+  /* PLAYERS TAB */
+  .add-player-form { display: flex; gap: 8px; margin-bottom: 12px; }
+  .add-player-form input { flex: 1; }
+  .add-player-form select { width: 110px; flex-shrink: 0; }
+  .add-btn { background: var(--green); color: #000; border: none; border-radius: 8px; padding: 0 16px; font-size: 20px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .player-manage-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg2); border-radius: 10px; margin-bottom: 6px; }
+  .player-manage-item .player-info { flex: 1; }
+  .del-btn { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 4px; }
+  .del-btn:hover { color: var(--red); }
+
+  /* SETTINGS */
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .setting-label { font-size: 14px; font-weight: 600; color: var(--text); }
+  .setting-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .setting-row input[type=text] { max-width: 200px; font-size: 12px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--green); color: #000; padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 14px; z-index: 9999; opacity: 0; transition: all .3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--red); color: #fff; }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; line-height: 1.5; }
+
+  /* SHEETS MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--bg2); border-radius: 20px 20px 0 0; padding: 24px 20px 36px; width: 100%; max-width: 480px; border: 1px solid var(--border); transform: translateY(40px); transition: transform .3s; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-title { font-family: var(--font-display); font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--text3); margin-bottom: 20px; line-height: 1.5; }
+  .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: var(--text3); font-size: 24px; cursor: pointer; }
+  .step { display: flex; gap: 12px; margin-bottom: 16px; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--green); color: #000; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .step-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .step-text strong { color: var(--text); }
+  .step-text a { color: var(--green); text-decoration: none; }
+  .step-text code { background: var(--bg3); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--yellow); }
+  .url-input-wrap { display: flex; gap: 8px; margin-top: 16px; }
+  .url-input-wrap input { flex: 1; font-size: 13px; }
+  .confirm-btn { background: var(--green); color: #000; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">⚽ <span>FC</span> Docházka</div>
+      <button class="sheets-btn" onclick="openSheetsModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        Google Sheets
+      </button>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('record')">Záznam</div>
+      <div class="tab" onclick="switchTab('history')">Historie</div>
+      <div class="tab" onclick="switchTab('players')">Hráči</div>
+    </div>
+  </div>
+
+  <div class="content" id="tab-record">
+    <!-- Session type -->
+    <div class="card">
+      <div class="card-title">Typ akce</div>
+      <div class="session-type-row">
+        <button class="type-btn active-training" id="btn-training" onclick="setType('training')">🏃 Trénink</button>
+        <button class="type-btn" id="btn-match" onclick="setType('match')">🏆 Zápas</button>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Datum</label>
+          <input type="date" id="session-date">
+        </div>
+        <div class="input-group" id="time-group">
+          <label>Čas</label>
+          <input type="time" id="session-time">
+        </div>
+      </div>
+      <div id="match-fields" style="display:none">
+        <div class="input-row">
+          <div class="input-group">
+            <label>Soupeř</label>
+            <input type="text" id="opponent" placeholder="Název soupeře">
+          </div>
+          <div class="input-group" style="max-width:100px">
+            <label>Skóre</label>
+            <input type="text" id="score" placeholder="2:1">
+          </div>
+        </div>
+      </div>
+      <div class="input-group" style="margin-bottom:0">
+        <label>Poznámka</label>
+        <textarea id="session-note" placeholder="Volitelná poznámka..."></textarea>
+      </div>
+    </div>
+
+    <!-- Player list -->
+    <div class="card">
+      <div class="players-header">
+        <div class="card-title" style="margin-bottom:0">Docházka hráčů</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="players-count">Přítomno: <strong id="present-count">0</strong></span>
+          <button class="select-all-btn" onclick="toggleAll()">Vybrat vše</button>
+        </div>
+      </div>
+      <div id="player-checklist"></div>
+    </div>
+
+    <!-- Match stats -->
+    <div class="card" id="match-stats-card" style="display:none">
+      <div class="card-title">Statistiky hráčů</div>
+      <div id="match-stats-list"></div>
+    </div>
+
+    <button class="save-btn" id="save-btn" onclick="saveSession()">💾 Uložit záznam</button>
+    <div style="height:20px"></div>
+  </div>
+
+  <div class="content" id="tab-history" style="display:none">
+    <div id="history-list"></div>
+  </div>
+
+  <div class="content" id="tab-players" style="display:none">
+    <div class="card">
+      <div class="card-title">Přidat hráče</div>
+      <div class="add-player-form">
+        <input type="text" id="new-player-name" placeholder="Jméno hráče">
+        <select id="new-player-pos">
+          <option value="BR">BR</option>
+          <option value="OB">OB</option>
+          <option value="ZZ">ZZ</option>
+          <option value="ÚT">ÚT</option>
+        </select>
+        <button class="add-btn" onclick="addPlayer()">+</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Seznam hráčů</div>
+      <div id="player-manage-list"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- Google Sheets Modal -->
+<div class="modal-overlay" id="sheets-modal" onclick="e=>{if(e.target===this)closeSheetsModal()}">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeSheetsModal()">✕</button>
+    <div class="modal-title">📊 Propojení s Google Sheets</div>
+    <div class="modal-sub">Záznamy se budou automaticky odesílat do vašeho spreadsheetu. Nastavení zabere ~5 minut.</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Otevřete <a href="https://sheets.google.com" target="_blank">Google Sheets</a> a vytvořte nový soubor s názvem <strong>"FC Docházka"</strong></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">V menu klikněte na <strong>Rozšíření → Apps Script</strong> a vložte skript: <br><code>Tools → Paste Script</code><br><small style="display:block;margin-top:6px;color:#5A7362">Skript si zkopírujte z pole níže ↓</small></div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Uložte a klikněte na <strong>Nasadit → Nové nasazení</strong>. Typ: <strong>Webová aplikace</strong>. Přístup: <strong>Kdokoliv</strong>. Zkopírujte URL a vložte sem ↓</div>
+    </div>
+
+    <div style="background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">Apps Script kód</span>
+        <button onclick="copyScript()" style="background:none;border:1px solid var(--border);color:var(--green);font-size:11px;padding:3px 10px;border-radius:4px;cursor:pointer">Kopírovat</button>
+      </div>
+      <pre id="script-code" style="font-size:10px;color:#8FA896;overflow-x:auto;white-space:pre-wrap;line-height:1.5">function doPost(e) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const data = JSON.parse(e.postData.contents);
+  
+  const sheetName = data.type === 'match' ? 'Zápasy' : 'Tréninky';
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    if (data.type === 'match') {
+      sheet.appendRow(['Datum','Čas','Soupeř','Skóre','Přítomní','Omluvení','Nepřítomní','Jiné','Poznámka','Statistiky']);
+    } else {
+      sheet.appendRow(['Datum','Čas','Přítomní','Omluvení','Nepřítomní','Jiné','% Účast','Poznámka']);
+    }
+    sheet.getRange(1,1,1,sheet.getLastColumn()).setFontWeight('bold');
+  }
+  
+  const present = data.players.filter(p=>p.status==='present').map(p=>p.name).join(', ');
+  const excused = data.players.filter(p=>p.status==='excused').map(p=>p.name).join(', ');
+  const absent = data.players.filter(p=>p.status==='absent').map(p=>p.name).join(', ');
+  const other = data.players.filter(p=>p.status==='other').map(p=>p.name).join(', ');
+  const pct = Math.round(data.players.filter(p=>p.status==='present').length / data.players.length * 100) + '%';
+  
+  if (data.type === 'match') {
+    const stats = data.players.filter(p=>p.goals||p.assists).map(p=>`${p.name}(${p.goals}g/${p.assists}a)`).join(', ');
+    sheet.appendRow([data.date, data.time, data.opponent||'', data.score||'', present, excused, absent, other, data.note||'', stats]);
+  } else {
+    sheet.appendRow([data.date, data.time, present, excused, absent, other, pct, data.note||'']);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
+}</pre>
+    </div>
+
+    <div class="url-input-wrap">
+      <input type="text" id="sheets-url-input" placeholder="Vložte URL webové aplikace..." style="font-size:13px">
+      <button class="confirm-btn" onclick="saveSheetsUrl()">Uložit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- STATE ----
+let state = {
+  sessionType: 'training',
+  sheetsUrl: localStorage.getItem('sheetsUrl') || '',
+  players: JSON.parse(localStorage.getItem('players') || 'null') || [
+    {id:1,name:'Jan Novák',pos:'BR'},{id:2,name:'Petr Svoboda',pos:'OB'},
+    {id:3,name:'Tomáš Dvořák',pos:'OB'},{id:4,name:'Martin Procházka',pos:'ZZ'},
+    {id:5,name:'Lukáš Krejčí',pos:'ZZ'},{id:6,name:'Pavel Novotný',pos:'ZZ'},
+    {id:7,name:'Jiří Kratochvíl',pos:'ZZ'},{id:8,name:'David Marék',pos:'ÚT'},
+    {id:9,name:'Michal Pospíšil',pos:'ÚT'},{id:10,name:'Ondřej Blažek',pos:'ÚT'},
+  ],
+  attendance: {}, // id -> 'present'|'excused'|'absent'
+  playerStats: {}, // id -> {goals, assists}
+  sessions: JSON.parse(localStorage.getItem('sessions') || '[]'),
+};
+
+// ---- INIT ----
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date();
+  document.getElementById('session-date').value = today.toISOString().split('T')[0];
+  document.getElementById('session-time').value = '17:00';
+  renderChecklist();
+  renderPlayerManage();
+  renderHistory();
+  if (state.sheetsUrl) document.getElementById('sheets-url-input').value = state.sheetsUrl;
+});
+
+// ---- TABS ----
+function switchTab(tab) {
+  ['record','history','players'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((el,i) => {
+    el.classList.toggle('active', ['record','history','players'][i] === tab);
+  });
+  if (tab === 'history') renderHistory();
+  if (tab === 'players') renderPlayerManage();
+}
+
+// ---- SESSION TYPE ----
+function setType(type) {
+  state.sessionType = type;
+  document.getElementById('btn-training').className = 'type-btn' + (type==='training'?' active-training':'');
+  document.getElementById('btn-match').className = 'type-btn' + (type==='match'?' active-match':'');
+  document.getElementById('match-fields').style.display = type==='match'?'block':'none';
+  document.getElementById('match-stats-card').style.display = type==='match'?'block':'none';
+  if (type==='match') renderMatchStats();
+}
+
+// ---- CHECKLIST ----
+function renderChecklist() {
+  const list = document.getElementById('player-checklist');
+  list.innerHTML = '';
+  state.players.forEach(p => {
+    const status = state.attendance[p.id] || 'absent';
+    const item = document.createElement('div');
+    item.className = 'player-item ' + status;
+    item.id = 'pi-'+p.id;
+    item.innerHTML = `
+      <div class="player-avatar">${p.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+      <div class="player-info">
+        <div class="player-name">${p.name}</div>
+        <div class="player-pos">${p.pos}</div>
+      </div>
+      <div class="status-group">
+        <div class="status-dot ${status==='present'?'s-present':''}" onclick="setStatus(${p.id},'present',event)" title="Přítomen">✓</div>
+        <div class="status-dot ${status==='excused'?'s-excused':''}" onclick="setStatus(${p.id},'excused',event)" title="Omluven">~</div>
+        <div class="status-dot ${status==='absent'?'s-absent':''}" onclick="setStatus(${p.id},'absent',event)" title="Nepřítomen">✗</div>
+        <div class="status-dot ${status==='other'?'s-other':''}" onclick="setStatus(${p.id},'other',event)" title="Jiné">?</div>
+      </div>`;
+    list.appendChild(item);
+  });
+  updateCount();
+}
+
+function setStatus(id, status, e) {
+  e.stopPropagation();
+  state.attendance[id] = status;
+  const item = document.getElementById('pi-'+id);
+  item.className = 'player-item ' + status;
+  item.querySelectorAll('.status-dot').forEach((d,i) => {
+    const s = ['present','excused','absent','other'][i];
+    d.className = 'status-dot' + (status===s?' s-'+s:'');
+  });
+  updateCount();
+}
+
+function updateCount() {
+  const cnt = Object.values(state.attendance).filter(s=>s==='present').length;
+  document.getElementById('present-count').textContent = cnt;
+}
+
+function toggleAll() {
+  const allPresent = state.players.every(p => state.attendance[p.id]==='present');
+  state.players.forEach(p => { state.attendance[p.id] = allPresent ? 'absent' : 'present'; });
+  renderChecklist();
+}
+
+// ---- MATCH STATS ----
+function renderMatchStats() {
+  const list = document.getElementById('match-stats-list');
+  list.innerHTML = '';
+  state.players.forEach(p => {
+    if (!state.playerStats[p.id]) state.playerStats[p.id] = {goals:0,assists:0};
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)';
+    row.innerHTML = `
+      <div style="flex:1;font-size:14px;font-weight:600">${p.name}</div>
+      <div class="stats-row">
+        <div class="stats-mini">
+          <span>⚽</span>
+          <input type="number" min="0" max="20" value="${state.playerStats[p.id].goals}"
+            onchange="state.playerStats[${p.id}].goals=+this.value">
+        </div>
+        <div class="stats-mini">
+          <span>🅰</span>
+          <input type="number" min="0" max="20" value="${state.playerStats[p.id].assists}"
+            onchange="state.playerStats[${p.id}].assists=+this.value">
+        </div>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+// ---- SAVE ----
+async function saveSession() {
+  const btn = document.getElementById('save-btn');
+  const date = document.getElementById('session-date').value;
+  const time = document.getElementById('session-time').value;
+  if (!date) { showToast('Zadejte datum!', true); return; }
+
+  const players = state.players.map(p => ({
+    id: p.id, name: p.name, pos: p.pos,
+    status: state.attendance[p.id] || 'absent',
+    goals: state.playerStats[p.id]?.goals || 0,
+    assists: state.playerStats[p.id]?.assists || 0,
+  }));
+
+  const session = {
+    id: Date.now(), type: state.sessionType, date, time,
+    opponent: document.getElementById('opponent')?.value || '',
+    score: document.getElementById('score')?.value || '',
+    note: document.getElementById('session-note').value,
+    players,
+    savedAt: new Date().toISOString(),
+  };
+
+  // Save locally
+  state.sessions.unshift(session);
+  localStorage.setItem('sessions', JSON.stringify(state.sessions));
+
+  // Send to Sheets
+  if (state.sheetsUrl) {
+    btn.textContent = '⏳ Odesílám...';
+    btn.disabled = true;
+    try {
+      await fetch(state.sheetsUrl, {
+        method: 'POST', mode: 'no-cors',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(session),
+      });
+      showToast('✅ Uloženo a odesláno do Sheets!');
+    } catch {
+      showToast('💾 Uloženo lokálně (Sheets nedostupné)', true);
+    }
+    btn.disabled = false;
+  } else {
+    showToast('💾 Uloženo lokálně');
+  }
+
+  btn.textContent = '💾 Uložit záznam';
+  // Reset attendance
+  state.attendance = {};
+  state.playerStats = {};
+  renderChecklist();
+  if (state.sessionType === 'match') renderMatchStats();
+  document.getElementById('session-note').value = '';
+  document.getElementById('score') && (document.getElementById('score').value = '');
+  document.getElementById('opponent') && (document.getElementById('opponent').value = '');
+}
+
+// ---- HISTORY ----
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!state.sessions.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Zatím žádné záznamy.<br>Přidejte první záznam docházky.</div></div>';
+    return;
+  }
+  list.innerHTML = '';
+  state.sessions.forEach(s => {
+    const present = s.players.filter(p=>p.status==='present');
+    const excused = s.players.filter(p=>p.status==='excused');
+    const absent = s.players.filter(p=>p.status==='absent');
+    const other = s.players.filter(p=>p.status==='other');
+    const card = document.createElement('div');
+    card.className = 'session-card';
+    const dateStr = new Date(s.date).toLocaleDateString('cs-CZ',{day:'numeric',month:'long'});
+    card.innerHTML = `
+      <div class="session-card-header" onclick="toggleDetail(this)">
+        <div class="session-meta">
+          <span class="session-type-tag ${s.type==='match'?'tag-match':'tag-training'}">${s.type==='match'?'⚽ Zápas':'🏃 Trénink'}</span>
+          <div class="session-date">${dateStr} ${s.time?'— '+s.time:''}</div>
+          ${s.type==='match'&&s.opponent?`<div style="font-size:12px;color:var(--text3)">vs ${s.opponent} ${s.score?'<strong style="color:var(--yellow)">'+s.score+'</strong>':''}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div class="session-stats">
+            <div class="stat-pill"><div class="stat-pill-val green">${present.length}</div><div class="stat-pill-lbl">přít.</div></div>
+            <div class="stat-pill"><div class="stat-pill-val yellow">${excused.length}</div><div class="stat-pill-lbl">oml.</div></div>
+            <div class="stat-pill"><div class="stat-pill-val red">${absent.length}</div><div class="stat-pill-lbl">nepr.</div></div>
+            ${other.length?`<div class="stat-pill"><div class="stat-pill-val" style="color:var(--blue)">${other.length}</div><div class="stat-pill-lbl">jiné</div></div>`:''}
+          </div>
+          <div class="session-expand">▼</div>
+        </div>
+      </div>
+      <div class="session-detail" style="display:none">
+        ${present.length?`<div style="margin-bottom:6px"><div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Přítomní</div><div class="detail-grid">${present.map(p=>`<span class="detail-chip chip-present">${p.name}</span>`).join('')}</div></div>`:''}
+        ${excused.length?`<div style="margin-bottom:6px"><div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Omluvení</div><div class="detail-grid">${excused.map(p=>`<span class="detail-chip chip-excused">${p.name}</span>`).join('')}</div></div>`:''}
+        ${absent.length?`<div style="margin-bottom:6px"><div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Nepřítomní</div><div class="detail-grid">${absent.map(p=>`<span class="detail-chip chip-absent">${p.name}</span>`).join('')}</div></div>`:''}
+        ${other.length?`<div style="margin-bottom:6px"><div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Jiné</div><div class="detail-grid">${other.map(p=>`<span class="detail-chip chip-other">${p.name}</span>`).join('')}</div></div>`:''}
+        ${s.type==='match'?`<div style="margin-top:8px"><div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Statistiky</div><div style="font-size:13px;color:var(--text2)">${s.players.filter(p=>p.goals||p.assists).map(p=>`${p.name}: ${p.goals}⚽ ${p.assists}🅰`).join(' · ') || 'Bez statistik'}</div></div>`:''}
+        ${s.note?`<div class="detail-note">📝 ${s.note}</div>`:''}
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function toggleDetail(header) {
+  const detail = header.nextElementSibling;
+  const arrow = header.querySelector('.session-expand');
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+}
+
+// ---- PLAYER MANAGEMENT ----
+function renderPlayerManage() {
+  const list = document.getElementById('player-manage-list');
+  list.innerHTML = '';
+  if (!state.players.length) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">Zatím žádní hráči</div>';
+    return;
+  }
+  state.players.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'player-manage-item';
+    item.innerHTML = `
+      <div class="player-avatar">${p.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+      <div class="player-info">
+        <div class="player-name">${p.name}</div>
+        <div class="player-pos">${p.pos}</div>
+      </div>
+      <button class="del-btn" onclick="deletePlayer(${p.id})">🗑</button>`;
+    list.appendChild(item);
+  });
+}
+
+function addPlayer() {
+  const name = document.getElementById('new-player-name').value.trim();
+  const pos = document.getElementById('new-player-pos').value;
+  if (!name) { showToast('Zadejte jméno hráče', true); return; }
+  const id = Date.now();
+  state.players.push({id, name, pos});
+  localStorage.setItem('players', JSON.stringify(state.players));
+  document.getElementById('new-player-name').value = '';
+  renderPlayerManage();
+  renderChecklist();
+  showToast('✅ Hráč přidán');
+}
+
+function deletePlayer(id) {
+  if (!confirm('Smazat hráče?')) return;
+  state.players = state.players.filter(p=>p.id!==id);
+  localStorage.setItem('players', JSON.stringify(state.players));
+  renderPlayerManage();
+  renderChecklist();
+}
+
+// ---- SHEETS ----
+function openSheetsModal() {
+  document.getElementById('sheets-modal').classList.add('open');
+}
+function closeSheetsModal() {
+  document.getElementById('sheets-modal').classList.remove('open');
+}
+function saveSheetsUrl() {
+  const url = document.getElementById('sheets-url-input').value.trim();
+  state.sheetsUrl = url;
+  localStorage.setItem('sheetsUrl', url);
+  closeSheetsModal();
+  showToast(url ? '✅ Google Sheets propojeno!' : 'URL odstraněno');
+}
+function copyScript() {
+  const code = document.getElementById('script-code').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('📋 Kód zkopírován!'));
+}
+
+// ---- TOAST ----
+function showToast(msg, error=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (error?' error':'') + ' show';
+  setTimeout(() => t.className = 'toast' + (error?' error':''), 2800);
+}
+</script>
+</body>
+</html>
